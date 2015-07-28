@@ -1,0 +1,102 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+        Base application theme, dependent on API level. This theme is replaced
+        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
+
+
+    -->
+    <style name="AppBaseTheme" parent="android:Theme.Light">
+        <!--
+            Theme customizations available in newer API levels can go in
+            res/values-vXX/styles.xml, while customizations related to
+            backward-compatibility can go here.
+
+
+        -->
+    </style>
+
+    <!-- Application theme. -->
+    <style name="AppTheme" parent="AppBaseTheme">
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:actionBarStyle">@style/CustomeActionBar</item>
+    </style>
+
+    <style name="CustomeActionBar" parent="@android:style/Widget.Holo.Light.ActionBar">
+
+        <!-- <item name="android:background">@drawable/bg_top</item> -->
+        <!--
+        <item name="android:backgroundStacked">@color/holo_blue_bright</item>
+        <item name="android:backgroundSplit">@android:color/black</item>
+
+
+
+        -->
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <style name="ListViewStyle" parent="android:Widget.AbsListView">
+        <item name="android:cacheColorHint">@null</item>
+        <item name="android:scrollingCache">false</item>
+        <item name="android:smoothScrollbar">true</item>
+        <item name="android:fastScrollEnabled">false</item>
+    </style>
+
+    <style name="TextStyle_1">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLarge</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextStyle_2">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="TextStyle_3">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="TextStyle_3_row_light" parent="TextStyle_3">
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:textColor">@android:color/black</item>
+        <item name="android:gravity">left|center_vertical</item>
+        <item name="android:layout_gravity">fill_horizontal</item>
+    </style>
+
+    <style name="TextStyle_3_row_dark" parent="TextStyle_3_row_light">
+
+    </style>
+
+    <style name="EditTextStyle_1">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceLarge</item>
+        <item name="android:ems">20</item>
+        <item name="android:lines">1</item>
+    </style>
+
+    <style name="EditTextStyle_2">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        <item name="android:ems">20</item>
+        <item name="android:inputType">textMultiLine|text</item>
+        <item name="android:gravity">left</item>
+    </style>
+
+    <style name="ButtonStyle_1">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>
