@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/frg_tire_pressure_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="20dp"
+    android:paddingTop="15dp"
+    tools:context=".ui.activity.MainActivity" >
+
+    <TextView
+        android:id="@+id/frg_tire_pressure_title"
+        style="@style/TextStyle_1"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:gravity="center"
+        android:text="@string/tire_pressure_title"/>
+
+    <ScrollView
+        android:id="@+id/frg_tire_pressure_scroll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fadingEdge="none"
+        android:overScrollMode="never"
+        android:paddingBottom="30dp"
+        android:paddingTop="15dp" >
+
+        <GridLayout
+            android:id="@+id/frg_tire_pressure_table"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:columnCount="2"
+            android:orientation="horizontal"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp" >
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_header_title"
+                style="@style/TextStyle_2"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginBottom="2dp"
+                android:layout_marginTop="15dp"
+                android:gravity="center"
+                android:text="@string/tire_pressure_header" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_name"
+                style="@style/TextStyle_2"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginBottom="2dp"
+                android:layout_marginTop="2dp"
+                android:gravity="left"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_proper_tire_inflation_title"
+                style="@style/TextStyle_2"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill_horizontal"
+                android:layout_marginBottom="2dp"
+                android:layout_marginTop="2dp"
+                android:gravity="left"
+                android:text="@string/tire_pressure_proper_tire_inflation" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_frb_title"
+                style="@style/TextStyle_3_row_light"
+                android:layout_marginRight="35dp"
+                android:text="@string/tire_pressure_frb" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_frb"
+                style="@style/TextStyle_3_row_light" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_size_title"
+                style="@style/TextStyle_3_row_dark"
+                android:text="@string/tire_pressure_size" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_size"
+                style="@style/TextStyle_3_row_dark" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_speed_rating_title"
+                style="@style/TextStyle_3_row_light"
+                android:text="@string/tire_pressure_speed_rating" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_speed_rating"
+                style="@style/TextStyle_3_row_light" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_front_inflation_title"
+                style="@style/TextStyle_3_row_dark"
+                android:text="@string/tire_pressure_front_inflation" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_front_inflation"
+                style="@style/TextStyle_3_row_dark" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_rear_inflation_title"
+                style="@style/TextStyle_3_row_light"
+                android:text="@string/tire_pressure_rear_inflation" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_rear_inflation"
+                style="@style/TextStyle_3_row_light" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_standart_optional_title"
+                style="@style/TextStyle_3_row_dark"
+                android:text="@string/tire_pressure_standart_optional" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_standart_optional"
+                style="@style/TextStyle_3_row_dark" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_vehtype_title"
+                style="@style/TextStyle_3_row_light"
+                android:text="@string/tire_pressure_vehtype" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_vehtype"
+                style="@style/TextStyle_3_row_light" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_cross_section_title"
+                style="@style/TextStyle_3_row_dark"
+                android:text="@string/tire_pressure_cross_section" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_cross_section"
+                style="@style/TextStyle_3_row_dark" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_aspect_title"
+                style="@style/TextStyle_3_row_light"
+                android:text="@string/tire_pressure_aspect" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_aspect"
+                style="@style/TextStyle_3_row_light" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_rim_size_title"
+                style="@style/TextStyle_3_row_dark"
+                android:text="@string/tire_pressure_rim_size" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_rim_size"
+                style="@style/TextStyle_3_row_dark" />
+
+            <TextView
+                android:id="@+id/frg_tire_pressure_content_notes"
+                android:layout_columnSpan="2"
+                android:layout_gravity="fill"
+                android:maxLines="6"
+                android:padding="5dp" />
+        </GridLayout>
+    </ScrollView>
+
+</RelativeLayout>
