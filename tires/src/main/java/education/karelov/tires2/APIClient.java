@@ -1,5 +1,7 @@
 package education.karelov.tires2;
 
+import java.util.List;
+
 import retrofit.Callback;
 import retrofit.http.Body;
 import retrofit.http.GET;
@@ -11,17 +13,17 @@ public interface APIClient {
 	void register(@Body PostJsonForPushNotification s, Callback<ResponseForPushNotification> cb);
 
 	@GET("/yearList")
-	void getYears(Callback<Respond> cb);
+	Respond getYears();
 
 	@GET("/makeList")
-	void getMakers(@Query("year") String year, Callback<Respond> cb);
+	Respond getMakers(@Query("year") String year);
 
 	@GET("/modelList")
-	void getModels(@Query("make") String make, Callback<Respond> cb);
+	Respond getModels(@Query("make") String make);
 	
 	@GET("/subModelList")
-	void getSubModels(@Query("model") String model, Callback<Respond> cb);
+	Respond getSubModels(@Query("model") String model);
 
 	@GET("/findResult")
-	void getInfo(@Query("baseId") String baseId, Callback<TireInfo> cb);
+	TireInfo getInfo(@Query("baseId") String baseId);
 }

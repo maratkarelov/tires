@@ -5,24 +5,20 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
-import android.os.Handler;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.util.ArrayList;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.List;
 
-import retrofit.Callback;
 import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 import retrofit.converter.GsonConverter;
 
 /**
@@ -39,7 +35,6 @@ public class MyContentProvider extends ContentProvider {
     // Таблица
     static final String YEARS_TABLE = "years";
     static final String MAKERS_TABLE = "makers";
-    private String table = "years";
 
     // Поля
     static final String _ID = "_id";
@@ -61,12 +56,21 @@ public class MyContentProvider extends ContentProvider {
     // path
     static final String YEARS_PATH = "years";
     static final String MAKERS_PATH = "makers";
+    static final String MODELS_PATH = "models";
+    static final String SUBMODELS_PATH = "submodels";
+    static final String TIRE_INFO_PATH = "tireinfo";
 
     // Общий Uri
     public static final Uri YEARS_URI = Uri.parse("content://"
             + AUTHORITY + "/" + YEARS_PATH);
     public static final Uri MAKERS_URI = Uri.parse("content://"
             + AUTHORITY + "/" + MAKERS_PATH);
+    public static final Uri MODELS_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + MODELS_PATH);
+    public static final Uri SUBMODELS_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + SUBMODELS_PATH);
+    public static final Uri TIRE_INFO_URI = Uri.parse("content://"
+            + AUTHORITY + "/" + TIRE_INFO_PATH);
 
     // Типы данных
     // набор строк
@@ -74,20 +78,32 @@ public class MyContentProvider extends ContentProvider {
             + AUTHORITY + "." + YEARS_PATH;
     static final String MAKERS_TYPE = "vnd.android.cursor.dir/vnd.makers"
             + AUTHORITY + "." + MAKERS_PATH;
+    static final String MODELS_TYPE = "vnd.android.cursor.dir/vnd.models"
+            + AUTHORITY + "." + MODELS_PATH;
+    static final String SUBMODELS_TYPE = "vnd.android.cursor.dir/vnd.submodels"
+            + AUTHORITY + "." + SUBMODELS_PATH;
+    static final String TIRE_INFO_TYPE = "vnd.android.cursor.dir/vnd.tireinfo"
+            + AUTHORITY + "." + TIRE_INFO_PATH;
 
 
     //// UriMatcher
     // общий Uri
     static final int YEARS = 1;
     static final int MAKERS = 2;
+    static final int MODELS = 3;
+    static final int SUBMODELS = 4;
+    static final int TIRE_INFO = 5;
 
     // описание и создание UriMatcher
-    private static final UriMatcher uriMatcher;
+    protected static final UriMatcher uriMatcher;
 
     static {
         uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         uriMatcher.addURI(AUTHORITY, YEARS_PATH, YEARS);
         uriMatcher.addURI(AUTHORITY, MAKERS_PATH, MAKERS);
+        uriMatcher.addURI(AUTHORITY, MODELS_PATH, MODELS);
+        uriMatcher.addURI(AUTHORITY, SUBMODELS_PATH, SUBMODELS);
+        uriMatcher.addURI(AUTHORITY, TIRE_INFO_PATH, TIRE_INFO);
     }
 
     public static final String[] PROJECTION = new String[]{
@@ -104,66 +120,35 @@ public class MyContentProvider extends ContentProvider {
     }
 
     DBHelper dbHelper;
-    Handler mHandlerYears;
-    Handler mHandlerMakers;
     SQLiteDatabase db;
     SQLiteQueryBuilder qb;
     private APIClient mAPIClient;
     Cursor cursor;
-    Uri mUri;
-    MyObserver myObserverYears;
-    MyObserver myObserverMakers;
+    List<RespondData> mYearsList;
+    List<RespondData> mMakersList;
+    List<RespondData> mModelsList;
+    List<RespondData> mSubModelsList;
+    TireInfo mTireInfo;
 
-    private Callback<Respond> mResponseListener = new Callback<Respond>() {
-        @Override
-        public void failure(RetrofitError arg0) {
-            Log.e("Error", arg0.getMessage());
+    private void requestData(int loaderID, String param) {
+        if (loaderID == YEARS) {
+//            Respond respond = mAPIClient.getModels("BMW");
+            Respond respond = mAPIClient.getYears();
+            mYearsList = respond.data;
+        } else if (loaderID == MAKERS) {
+            Respond respond = mAPIClient.getMakers(param);
+            mMakersList = respond.data;
+        } else if (loaderID == MODELS) {
+            Respond respond = mAPIClient.getModels(param);
+            mModelsList = respond.data;
+        } else if (loaderID == SUBMODELS) {
+            Respond respond = mAPIClient.getSubModels(param);
+            mSubModelsList = respond.data;
+        } else if (loaderID == TIRE_INFO) {
+            mTireInfo = mAPIClient.getInfo(param);
         }
-
-        @Override
-        public void success(Respond arg0, Response arg1) {
-            List<IMap> list = new ArrayList<IMap>(arg0.data.size());
-            if (arg0.data.size() > 0) {
-                ContentValues cv = new ContentValues();
-                for (RespondData data : arg0.data) {
-                    cv.put(VALUE, data.value);
-                    insert(mUri, cv);
-                }
-                if (table.equals("years")) {
-                    table = "makers";
-                } else if (table.equals("makers")) {
-                    table = "models";
-                } else if (table.equals("models")) {
-                    table = "subModels";
-                }
-            }
-        }
-    };
-
-    private Callback<TireInfo> mInfoListener = new Callback<TireInfo>() {
-        @Override
-        public void failure(RetrofitError arg0) {
-            Log.e("Error", arg0.getMessage());
-        }
-
-        @Override
-        public void success(TireInfo arg0, Response arg1) {
-//            startInfoActivity(arg0);
-        }
-    };
-
-    private void requestData(String param) {
-        if (table.equals("years")) {
-            mAPIClient.getYears(mResponseListener);
-        } else if (table.equals("makers")) {
-            mAPIClient.getMakers(param, mResponseListener);
-        } else if (table.equals("models")) {
-            mAPIClient.getModels(param, mResponseListener);
-        } else if (table.equals("subModels")) {
-            mAPIClient.getInfo(param, mInfoListener);
-        }
-        Log.e("myLogs", "requestData table = " + table);
     }
+
 
     @Override
     public boolean onCreate() {
@@ -178,46 +163,118 @@ public class MyContentProvider extends ContentProvider {
         Gson gson = new GsonBuilder().create();
         RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("http://demo-mob.nedis.net.ua").setConverter(new GsonConverter(gson)).build();
         mAPIClient = restAdapter.create(APIClient.class);
-        mHandlerYears = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                Log.d("handler", msg.toString());
-            }
-        };
-        mHandlerMakers = new Handler() {
-            public void handleMessage(android.os.Message msg) {
-                Log.d("handler", msg.toString());
-            }
-        };
         return false;
     }
 
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
         String param = "";
+        cursor = new MatrixCursor(new String[]{"_id", "value"});
+        Cursor cursorExist;
         switch (uriMatcher.match(uri)) {
             case YEARS:
-                qb.setTables(YEARS_TABLE);
-                qb.setProjectionMap(mProjectionMap);
-                myObserverYears = new MyObserver(mHandlerYears);
-                getContext().getContentResolver().registerContentObserver(uri, true, myObserverYears);
-                break;
+                // проверка существования записей
+                 cursorExist = db.query(YEARS_TABLE, projection, selection, selectionArgs, null, null, null);
+                if (cursorExist.getCount() == 0) {
+                    requestData(YEARS, "");
+                    ContentValues cv = new ContentValues();
+                    for (int i = 0; i < mYearsList.size(); i++) {
+                        cv.put("_id", String.valueOf(i));
+                        cv.put("value", mYearsList.get(i).getValue());
+                        db.insert(YEARS_TABLE, null, cv);
+                    }
+                }
+                cursor = db.query(YEARS_TABLE, projection, selection, selectionArgs, null, null, null);;
+//                for (RespondData respondData : mYearsList) {
+//                    ((MatrixCursor)cursor).addRow(new String[]{"0", respondData.getValue()});
+//                }
+                return cursor;
             case MAKERS:
+                // проверка существования записей
+                cursorExist = db.query(MAKERS_TABLE, projection, selection, selectionArgs, null, null, null);
+                if (cursorExist.getCount() == 0) {
+                    param = selectionArgs[0];
+                    requestData(MAKERS, param);
+                    ContentValues cv = new ContentValues();
+                    for (int i = 0; i < mMakersList.size(); i++) {
+                        cv.put("_id", String.valueOf(i));
+                        cv.put("value", mMakersList.get(i).getValue());
+                        db.insert(MAKERS_TABLE, null, cv);
+                    }
+                }
+                cursor = db.query(MAKERS_TABLE, projection, selection, selectionArgs, null, null, null);;
+//                qb.setTables(MAKERS_TABLE);
+//                qb.setProjectionMap(mProjectionMap);
+//                myObserverMakers = new MyObserver(mHandlerMakers);
+//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
+//                break;
+//                for (RespondData respondData : mMakersList) {
+//                    cursor.addRow(new String[]{"0", respondData.getValue()});
+//                }
+                return cursor;
+            case MODELS:
                 param = selectionArgs[0];
-                qb.setTables(MAKERS_TABLE);
-                qb.setProjectionMap(mProjectionMap);
-                myObserverMakers = new MyObserver(mHandlerMakers);
-                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
-                break;
+                requestData(MODELS, param);
+//                qb.setTables(MAKERS_TABLE);
+//                qb.setProjectionMap(mProjectionMap);
+//                myObserverMakers = new MyObserver(mHandlerMakers);
+//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
+//                break;
+//                for (RespondData respondData : mModelsList) {
+//                    cursor.addRow(new String[]{"0", respondData.getValue()});
+//                }
+                return cursor;
+            case SUBMODELS:
+                param = selectionArgs[0];
+                requestData(SUBMODELS, param);
+//                qb.setTables(MAKERS_TABLE);
+//                qb.setProjectionMap(mProjectionMap);
+//                myObserverMakers = new MyObserver(mHandlerMakers);
+//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
+//                break;
+//                for (RespondData respondData : mSubModelsList) {
+//                    cursor.addRow(new String[]{respondData.getKey(), respondData.getValue()});
+//                }
+                return cursor;
+            case TIRE_INFO:
+                param = selectionArgs[0];
+                requestData(TIRE_INFO, param);
+//                qb.setTables(MAKERS_TABLE);
+//                qb.setProjectionMap(mProjectionMap);
+//                myObserverMakers = new MyObserver(mHandlerMakers);
+//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
+//                break;
+                String[] fieldsString = new String[TireInfo.class.getFields().length + 1];
+                String[] valuesString = new String[TireInfo.class.getFields().length + 1];
+                Field[] fields = TireInfo.class.getFields();
+                for (int i = 0; i < fields.length; i++) {
+                    fieldsString[i] = fields[i].getName();
+                    Field field = fields[i];
+                    String value = "";
+                    if (field.getType().getName().equals("java.lang.String")) {
+                        try {
+                            value = (String) field.get(mTireInfo);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    valuesString[i] = value;
+                }
+                fieldsString[fields.length] = "_id";
+                valuesString[fields.length] = "0";
+//                cursor = new MatrixCursor(fieldsString);
+//                cursor.addRow(valuesString);
+                return cursor;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
-        cursor = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);
-        mUri = uri;
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
-        if (cursor.getCount() == 0) {
-            requestData(param);
-        }
-        return cursor;
+
+//        cursor = qb.query(db, projection, selection, selectionArgs, null, null, sortOrder);
+//        mUri = uri;
+//        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+//        if (cursor.getCount() == 0) {
+//            requestData(param);
+//        }
     }
 
     @Override
@@ -227,6 +284,10 @@ public class MyContentProvider extends ContentProvider {
                 return YEARS_TYPE;
             case MAKERS:
                 return MAKERS_TYPE;
+            case MODELS:
+                return MODELS_TYPE;
+            case SUBMODELS:
+                return SUBMODELS_TYPE;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -234,12 +295,7 @@ public class MyContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        db.insert(table, null, values);
-        if (table.equals("years")) {
-            getContext().getContentResolver().notifyChange(uri, myObserverYears);
-        } else if (table.equals("makers")) {
-            getContext().getContentResolver().notifyChange(uri, myObserverMakers);
-        }
+//        db.insert(table, null, values);
         return uri;
     }
 

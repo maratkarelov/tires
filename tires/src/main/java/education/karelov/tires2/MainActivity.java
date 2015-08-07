@@ -1,6 +1,9 @@
 package education.karelov.tires2;
 
+import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -18,6 +21,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -28,6 +32,9 @@ import retrofit.converter.GsonConverter;
 public class MainActivity extends FragmentActivity implements LoaderManager.LoaderCallbacks<Cursor> {
     private APIClient mAPIClient;
     private DataAdapter mAdapter;
+    private LoaderManager.LoaderCallbacks loaderCallbacks;
+    private Uri mUri;
+    private int loaderID;
 
     OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
         @Override
@@ -36,10 +43,38 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
             Cursor cur = (Cursor) mAdapter.getItem(position);
             cur.moveToPosition(position);
             String value = cur.getString(cur.getColumnIndexOrThrow("value"));
-            String selection = "value = ?";
-            String[] selectionArgs = {value};
-            Cursor cursor = getContentResolver().query(MyContentProvider.MAKERS_URI, MyContentProvider.PROJECTION, selection, selectionArgs, null, null);
-            mAdapter.swapCursor(cursor);
+            String key = cur.getString(cur.getColumnIndexOrThrow("_id"));
+            String[] selectionArgs = new String[1];
+            Bundle bundle = new Bundle();
+            if (mUri == MyContentProvider.YEARS_URI) {
+                mUri = MyContentProvider.MAKERS_URI;
+                loaderID = MyContentProvider.MAKERS;
+                bundle.putString("selection", "value = ?");
+                selectionArgs = new String[]{value};
+            } else if (mUri == MyContentProvider.MAKERS_URI) {
+                mUri = MyContentProvider.MODELS_URI;
+                loaderID = MyContentProvider.MODELS;
+                bundle.putString("selection", "value = ?");
+                selectionArgs = new String[]{value};
+            } else if (mUri == MyContentProvider.MODELS_URI) {
+                mUri = MyContentProvider.SUBMODELS_URI;
+                loaderID = MyContentProvider.SUBMODELS;
+                bundle.putString("selection", "value = ?");
+                selectionArgs = new String[]{value};
+            } else if (mUri == MyContentProvider.SUBMODELS_URI) {
+                mUri = MyContentProvider.TIRE_INFO_URI;
+                loaderID = MyContentProvider.TIRE_INFO;
+                bundle.putString("selection", "baseId = ?");
+                selectionArgs = new String[]{key};
+            }
+            bundle.putString("uri", mUri.toString());
+            bundle.putStringArray("projection", MyContentProvider.PROJECTION);
+            bundle.putStringArray("selectionArgs", selectionArgs);
+            Loader loader = getSupportLoaderManager().getLoader(loaderID);
+            if (loader != null) {
+                getSupportLoaderManager().restartLoader(loaderID, bundle, loaderCallbacks);
+            }
+            getSupportLoaderManager().initLoader(loaderID, bundle, loaderCallbacks);
         }
     };
 
@@ -47,6 +82,7 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        loaderCallbacks = this;
 //        MyTask myTask = new MyTask();
 //        myTask.execute();
         // create adapter for ListView
@@ -54,34 +90,109 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
         ListView listView = (ListView) findViewById(R.id.list_content);
         listView.setOnItemClickListener(mOnItemClickListener);
         listView.setAdapter(mAdapter);
-        getSupportLoaderManager().initLoader(0, null, this);
+        mUri = MyContentProvider.YEARS_URI;
+        loaderID = MyContentProvider.YEARS;
+        Bundle bundle = new Bundle();
+        bundle.putString("uri", mUri.toString());
+        bundle.putStringArray("projection", MyContentProvider.PROJECTION);
+        getSupportLoaderManager().initLoader(loaderID, bundle, this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (mUri == MyContentProvider.TIRE_INFO_URI) {
+            mUri = MyContentProvider.SUBMODELS_URI;
+        }
     }
-
 
     @Override
     public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
-        return new CursorLoader(
-                this,
-                MyContentProvider.YEARS_URI,
-                MyContentProvider.PROJECTION,
-                null,
-                null,
-                null);
+        String stringUri = arg1.getString("uri");
+        Uri uri = Uri.parse(stringUri);
+        String[] projection = arg1.getStringArray("projection");
+        String selection = arg1.getString("selection");
+        String[] selectionArgs = arg1.getStringArray("selectionArgs");
+
+        return new MyCursorLoader(this, uri, projection, selection, selectionArgs, null);
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor newData) {
-        mAdapter.swapCursor(newData);
+        if (loaderID == MyContentProvider.TIRE_INFO) {
+            startInfoActivity(newData);
+        } else {
+            mAdapter.changeCursor(newData);
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        mAdapter.swapCursor(null);
+        mAdapter.changeCursor(null);
+    }
+
+    private void startInfoActivity(Cursor cursor) {
+        cursor.moveToPosition(0);
+        Intent intent = new Intent(this, Activity_TireInfo.class);
+        TireInfo tireInfo = new TireInfo();
+        for (int i = 0; i < cursor.getColumnCount(); i++) {
+            String nameColumn = cursor.getColumnName(i);
+            String valueColumn = cursor.getString(i);
+            if (!valueColumn.isEmpty()) {
+                Class<?> c = tireInfo.getClass();
+                Field field = null;
+                try {
+                    field = c.getDeclaredField(nameColumn);
+                    field.set(tireInfo, valueColumn);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        intent.putExtra(TireInfo.class.getCanonicalName(), tireInfo);
+        startActivity(intent);
+    }
+
+    public void clickBack(View view) {
+        if (mUri == MyContentProvider.MAKERS_URI) {
+            mUri = MyContentProvider.YEARS_URI;
+        } else if (mUri == MyContentProvider.MODELS_URI) {
+            mUri = MyContentProvider.MAKERS_URI;
+        } else if (mUri == MyContentProvider.SUBMODELS_URI) {
+            mUri = MyContentProvider.MODELS_URI;
+        }
+        loaderID = MyContentProvider.uriMatcher.match(mUri);
+        Bundle bundle = new Bundle();
+        bundle.putString("uri", mUri.toString());
+        bundle.putStringArray("projection", MyContentProvider.PROJECTION);
+        getSupportLoaderManager().getLoader(loaderID).forceLoad();
+    }
+
+    static class MyCursorLoader extends CursorLoader {
+        Context context;
+        Uri uri;
+        String[] projection;
+        String selection;
+        String[] selectionArgs;
+
+        public MyCursorLoader(Context context, Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+            super(context, uri, projection, selection, selectionArgs, sortOrder);
+            this.context = context;
+            this.uri = uri;
+            this.projection = projection;
+            this.selection = selection;
+            this.selectionArgs = selectionArgs;
+        }
+
+        @Override
+        public Cursor loadInBackground() {
+            Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null, null);
+            try {
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return cursor;
+        }
     }
 
     class MyTask extends AsyncTask<Void, Void, String> {

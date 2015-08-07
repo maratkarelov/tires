@@ -1,7 +1,9 @@
 package education.karelov.tires2;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 
 
@@ -36,6 +38,10 @@ public class Activity_TireInfo extends Activity {
 			 ((TextView) findViewById(R.id.frg_tire_pressure_content_notes)).setText(mTirePressure.notes);
 			 
 		}
+	}
+
+	public void clickBack(View view) {
+		finish();
 	}
 
 }

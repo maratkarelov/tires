@@ -1,8 +1,10 @@
 package education.karelov.tires2;
 
+import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
+import android.view.View;
 
 public class TireInfo implements Parcelable {
 	public String result;
@@ -26,7 +28,6 @@ public class TireInfo implements Parcelable {
 
 	final static String LOG_TAG = "myLogs";
 
-	// ������� �����������
 	public TireInfo() {
 		Log.d(LOG_TAG, "MyObject(String _s, int _i)");
 	}
@@ -35,7 +36,6 @@ public class TireInfo implements Parcelable {
 		return 0;
 	}
 
-	// ����������� ������ � Parcel
 	public void writeToParcel(Parcel parcel, int flags) {
 		Log.d(LOG_TAG, "writeToParcel");
 		parcel.writeString(result);
@@ -59,7 +59,6 @@ public class TireInfo implements Parcelable {
 	}
 
 	public static final Creator<TireInfo> CREATOR = new Creator<TireInfo>() {
-		// ������������� ������ �� Parcel
 		public TireInfo createFromParcel(Parcel in) {
 			Log.d(LOG_TAG, "createFromParcel");
 			return new TireInfo(in);
@@ -70,7 +69,6 @@ public class TireInfo implements Parcelable {
 		}
 	};
 
-	// �����������, ����������� ������ �� Parcel
 	private TireInfo(Parcel parcel) {
 		Log.d(LOG_TAG, "TireInfo(Parcel parcel)");
 		result = parcel.readString();
