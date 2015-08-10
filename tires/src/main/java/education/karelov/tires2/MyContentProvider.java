@@ -30,23 +30,38 @@ public class MyContentProvider extends ContentProvider {
     // // Константы для БД
     // БД
     static final String DB_NAME = "mydb1";
-    static final int DB_VERSION = 1;
+    static final int DB_VERSION = 2;
 
     // Таблица
     static final String YEARS_TABLE = "years";
     static final String MAKERS_TABLE = "makers";
+    static final String MODELS_TABLE = "models";
+    static final String SUBMODELS_TABLE = "submodels";
 
     // Поля
     static final String _ID = "_id";
     static final String VALUE = "value";
+    static final String IN_CASH = "inCash";
 
-    // Скрипт создания таблицы
     static final String DB_CREATE_YEARS = "create table " + YEARS_TABLE + "("
             + _ID + " integer primary key autoincrement, "
+            + IN_CASH + " boolean, "
+            + "selection text, "
             + VALUE + " text);";
-    // Скрипт создания таблицы
     static final String DB_CREATE_MAKERS = "create table " + MAKERS_TABLE + "("
             + _ID + " integer primary key autoincrement, "
+            + IN_CASH + " boolean, "
+            + "selection text, "
+            + VALUE + " text);";
+    static final String DB_CREATE_MODELS = "create table " + MODELS_TABLE + "("
+            + _ID + " integer primary key autoincrement, "
+            + IN_CASH + " boolean, "
+            + "selection text, "
+            + VALUE + " text);";
+    static final String DB_CREATE_SUBMODELS = "create table " + SUBMODELS_TABLE + "("
+            + _ID + " integer primary key autoincrement, "
+            + IN_CASH + " boolean, "
+            + "selection text, "
             + VALUE + " text);";
 
     // // Uri
@@ -106,10 +121,7 @@ public class MyContentProvider extends ContentProvider {
         uriMatcher.addURI(AUTHORITY, TIRE_INFO_PATH, TIRE_INFO);
     }
 
-    public static final String[] PROJECTION = new String[]{
-            _ID,
-            VALUE
-    };
+    public static final String[] PROJECTION = new String[]{_ID, VALUE, IN_CASH};
 
     private static HashMap<String, String> mProjectionMap = new HashMap<String, String>();
 
@@ -157,8 +169,12 @@ public class MyContentProvider extends ContentProvider {
         qb = new SQLiteQueryBuilder();
         db.execSQL("DROP TABLE IF EXISTS " + YEARS_TABLE);
         db.execSQL("DROP TABLE IF EXISTS " + MAKERS_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + MODELS_TABLE);
+        db.execSQL("DROP TABLE IF EXISTS " + SUBMODELS_TABLE);
         db.execSQL(DB_CREATE_YEARS);
         db.execSQL(DB_CREATE_MAKERS);
+        db.execSQL(DB_CREATE_MODELS);
+        db.execSQL(DB_CREATE_SUBMODELS);
         // create REST adapter
         Gson gson = new GsonBuilder().create();
         RestAdapter restAdapter = new RestAdapter.Builder().setEndpoint("http://demo-mob.nedis.net.ua").setConverter(new GsonConverter(gson)).build();
@@ -171,67 +187,90 @@ public class MyContentProvider extends ContentProvider {
         String param = "";
         cursor = new MatrixCursor(new String[]{"_id", "value"});
         Cursor cursorExist;
+        ContentValues cv = new ContentValues();
+        int row;
         switch (uriMatcher.match(uri)) {
             case YEARS:
                 // проверка существования записей
-                 cursorExist = db.query(YEARS_TABLE, projection, selection, selectionArgs, null, null, null);
+                cursorExist = db.query(YEARS_TABLE, projection, selection, selectionArgs, null, null, null);
                 if (cursorExist.getCount() == 0) {
                     requestData(YEARS, "");
-                    ContentValues cv = new ContentValues();
+                    cv.clear();
                     for (int i = 0; i < mYearsList.size(); i++) {
-                        cv.put("_id", String.valueOf(i));
+//                        cv.put("_id", String.valueOf(i));
+                        cv.put("inCash", "false");
+                        cv.put("selection", mYearsList.get(i).getValue());
                         cv.put("value", mYearsList.get(i).getValue());
                         db.insert(YEARS_TABLE, null, cv);
                     }
                 }
-                cursor = db.query(YEARS_TABLE, projection, selection, selectionArgs, null, null, null);;
+                cursor = db.query(YEARS_TABLE, projection, selection, selectionArgs, null, null, null);
 //                for (RespondData respondData : mYearsList) {
 //                    ((MatrixCursor)cursor).addRow(new String[]{"0", respondData.getValue()});
 //                }
                 return cursor;
             case MAKERS:
+                cv.clear();
+                cv.put("inCash", "true");
+                row = db.update(YEARS_TABLE, cv, "value = ?", selectionArgs);
                 // проверка существования записей
                 cursorExist = db.query(MAKERS_TABLE, projection, selection, selectionArgs, null, null, null);
                 if (cursorExist.getCount() == 0) {
                     param = selectionArgs[0];
                     requestData(MAKERS, param);
-                    ContentValues cv = new ContentValues();
+                    cv.clear();
                     for (int i = 0; i < mMakersList.size(); i++) {
-                        cv.put("_id", String.valueOf(i));
+                        cv.put("inCash", "false");
+                        cv.put("selection", param);
                         cv.put("value", mMakersList.get(i).getValue());
-                        db.insert(MAKERS_TABLE, null, cv);
+                        long row1 = db.insert(MAKERS_TABLE, null, cv);
                     }
                 }
-                cursor = db.query(MAKERS_TABLE, projection, selection, selectionArgs, null, null, null);;
-//                qb.setTables(MAKERS_TABLE);
-//                qb.setProjectionMap(mProjectionMap);
-//                myObserverMakers = new MyObserver(mHandlerMakers);
-//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
-//                break;
+                cursor = db.query(MAKERS_TABLE, projection, selection, selectionArgs, null, null, null);
 //                for (RespondData respondData : mMakersList) {
 //                    cursor.addRow(new String[]{"0", respondData.getValue()});
 //                }
                 return cursor;
             case MODELS:
-                param = selectionArgs[0];
-                requestData(MODELS, param);
-//                qb.setTables(MAKERS_TABLE);
-//                qb.setProjectionMap(mProjectionMap);
-//                myObserverMakers = new MyObserver(mHandlerMakers);
-//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
-//                break;
+                cv.clear();
+                cv.put("inCash", "true");
+                row = db.update(MAKERS_TABLE, cv, "value = ?", selectionArgs);
+                // проверка существования записей
+                cursorExist = db.query(MODELS_TABLE, projection, selection, selectionArgs, null, null, null);
+                if (cursorExist.getCount() == 0) {
+                    param = selectionArgs[0];
+                    requestData(MODELS, param);
+                    cv.clear();
+                    for (int i = 0; i < mModelsList.size(); i++) {
+                        cv.put("inCash", "false");
+                        cv.put("selection", param);
+                        cv.put("value", mModelsList.get(i).getValue());
+                        long row1 = db.insert(MODELS_TABLE, null, cv);
+                    }
+                }
+                cursor = db.query(MODELS_TABLE, projection, selection, selectionArgs, null, null, null);
 //                for (RespondData respondData : mModelsList) {
 //                    cursor.addRow(new String[]{"0", respondData.getValue()});
 //                }
                 return cursor;
             case SUBMODELS:
-                param = selectionArgs[0];
-                requestData(SUBMODELS, param);
-//                qb.setTables(MAKERS_TABLE);
-//                qb.setProjectionMap(mProjectionMap);
-//                myObserverMakers = new MyObserver(mHandlerMakers);
-//                getContext().getContentResolver().registerContentObserver(uri, true, myObserverMakers);
-//                break;
+                cv.clear();
+                cv.put("inCash", "true");
+                row = db.update(MODELS_TABLE, cv, "value = ?", selectionArgs);
+                // проверка существования записей
+                cursorExist = db.query(SUBMODELS_TABLE, projection, selection, selectionArgs, null, null, null);
+                if (cursorExist.getCount() == 0) {
+                    param = selectionArgs[0];
+                    requestData(SUBMODELS, param);
+                    cv.clear();
+                    for (int i = 0; i < mSubModelsList.size(); i++) {
+                        cv.put("inCash", "false");
+                        cv.put("selection", param);
+                        cv.put("value", mSubModelsList.get(i).getValue());
+                        long row1 = db.insert(SUBMODELS_TABLE, null, cv);
+                    }
+                }
+                cursor = db.query(SUBMODELS_TABLE, projection, selection, selectionArgs, null, null, null);
 //                for (RespondData respondData : mSubModelsList) {
 //                    cursor.addRow(new String[]{respondData.getKey(), respondData.getValue()});
 //                }
@@ -316,13 +355,34 @@ public class MyContentProvider extends ContentProvider {
         }
 
         public void onCreate(SQLiteDatabase db) {
+            db.execSQL("DROP table " + YEARS_TABLE + " if exist;");
+            db.execSQL("DROP table " + MAKERS_TABLE + " if exist;");
+            db.execSQL("DROP table " + MODELS_TABLE + " if exist;");
+            db.execSQL("DROP table " + SUBMODELS_TABLE + " if exist;");
             db.execSQL(DB_CREATE_YEARS);
             db.execSQL(DB_CREATE_MAKERS);
+            db.execSQL(DB_CREATE_MODELS);
+            db.execSQL(DB_CREATE_SUBMODELS);
         }
 
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-            db.execSQL("DROP TABLE IF EXISTS " + YEARS_TABLE);
-            db.execSQL("DROP TABLE IF EXISTS " + MAKERS_TABLE);
+
+            if (oldVersion == 1 && newVersion == 2) {
+
+                ContentValues cv = new ContentValues();
+                db.beginTransaction();
+                try {
+                    cv.put("isCash", "false");
+                    db.execSQL("DROP table " + YEARS_TABLE + " if exist;");
+                    db.execSQL("DROP table " + MAKERS_TABLE + " if exist;");
+//                    db.execSQL("alter table " + YEARS_TABLE + " add column inCash boolean NOT NULL default false;");
+//                    db.execSQL("alter table " + MAKERS_TABLE + " add column inCash boolean NOT NULL default false;");
+                    db.setTransactionSuccessful();
+                } finally {
+                    db.endTransaction();
+                }
+            }
         }
+
     }
 }

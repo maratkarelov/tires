@@ -2,6 +2,7 @@ package education.karelov.tires2;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,12 @@ public class DataAdapter extends CursorAdapter {
         String name = cur.getString(cur.getColumnIndex(MyContentProvider.VALUE));
         ViewHolder holder = (ViewHolder) view.getTag();
         if (holder != null) {
+            String inCash = cur.getString(cur.getColumnIndex(MyContentProvider.IN_CASH));
+            if (inCash.equals("false")) {
+                view.setBackgroundColor(Color.WHITE);
+            } else {
+                view.setBackgroundColor(Color.GRAY);
+            }
             holder.tvName.setText(name);
         }
     }

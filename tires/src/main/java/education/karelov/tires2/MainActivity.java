@@ -49,17 +49,17 @@ public class MainActivity extends FragmentActivity implements LoaderManager.Load
             if (mUri == MyContentProvider.YEARS_URI) {
                 mUri = MyContentProvider.MAKERS_URI;
                 loaderID = MyContentProvider.MAKERS;
-                bundle.putString("selection", "value = ?");
+                bundle.putString("selection", "selection = ?");
                 selectionArgs = new String[]{value};
             } else if (mUri == MyContentProvider.MAKERS_URI) {
                 mUri = MyContentProvider.MODELS_URI;
                 loaderID = MyContentProvider.MODELS;
-                bundle.putString("selection", "value = ?");
+                bundle.putString("selection", "selection = ?");
                 selectionArgs = new String[]{value};
             } else if (mUri == MyContentProvider.MODELS_URI) {
                 mUri = MyContentProvider.SUBMODELS_URI;
                 loaderID = MyContentProvider.SUBMODELS;
-                bundle.putString("selection", "value = ?");
+                bundle.putString("selection", "selection = ?");
                 selectionArgs = new String[]{value};
             } else if (mUri == MyContentProvider.SUBMODELS_URI) {
                 mUri = MyContentProvider.TIRE_INFO_URI;
